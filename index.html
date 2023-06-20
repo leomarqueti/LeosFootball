@@ -1,56 +1,36 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Estatísticas de Futebol</title>
-    <style>
-        /* Adicione seu CSS aqui */
-    </style>
+    <title>Search Football Players</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
-    <header>
-        <h1>Estatísticas de Futebol</h1>
-    </header>
-    <main>
-        <div id="statistics"></div>
-    </main>
-    <footer>
-        <!-- Adicione o conteúdo do rodapé aqui -->
-    </footer>
+    <h1>Search Football Players</h1>
+    <input type="text" id="search-input" placeholder="Enter player's name...">
+    <button id="search-button">Search</button>
+    <div id="results"></div>
+
     <script>
-        // Substitua 'YOUR_API_KEY' pela sua chave API.
-        var apiKey = 'EOAHIJbGub1ccNohpLkb7t8MRps5BQvEWZPvzKuTI1R7Vssz8qaHsYpUcmqT';
-        
-        // Substitua 'PLAYER_ID' pelo ID do jogador que você deseja obter estatísticas.
-        var playerId = '580';
-        
-        // Construa a URL da API.
-        var apiUrl = 'https://www.api-football.com/api/?Action=get_players&player_id=' + playerId + '&APIkey=' + apiKey;
-        
-        // Crie uma nova solicitação.
-        var request = new XMLHttpRequest();
-        
-        request.open('GET', apiUrl, true);
-        
-        request.onload = function () {
-            // Verifique se a solicitação foi bem-sucedida.
-            if (this.status >= 200 && this.status < 400) {
-                // A solicitação foi bem-sucedida e os dados podem ser extraídos.
-                var data = JSON.parse(this.response);
-                
-                // Exiba os dados na página.
-                document.getElementById('statistics').innerHTML = JSON.stringify(data, null, 2);
-            } else {
-                // A solicitação falhou.
-                console.error('Request failed.  Returned status of ' + this.status);
-            }
-        };
-        
-        request.onerror = function() {
-            // Houve uma conexão erro de algum tipo.
-            console.error('Request failed.');
-        };
-        
-        request.send();
+        // Your Sportmonks API token
+        var api_token = 'EOAHIJbGub1ccNohpLkb7t8MRps5BQvEWZPvzKuTI1R7Vssz8qaHsYpUcmqT';
+
+        // Event listener for the search button
+        $('#search-button').on('click', function() {
+            var search_query = $('#search-input').val();
+            var url = 'https://api.sportmonks.com/v3/football/players/search/' + search_query + '?api_token=' + api_token;
+
+            // Make the API request
+            $.getJSON(url, function(data) {
+                // Clear previous results
+                $('#results').empty();
+
+                // Iterate over each player in the response
+                $.each(data.data, function(index, player) {
+                    // Add player's name to the results div
+                    $('#results').append('<p>' + player.firstname + ' ' + player.lastname + '</p>');
+                });
+            });
+        });
     </script>
 </body>
 </html>
