@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Estatísticas de Futebol</title>
+    <style>
+        /* Adicione seu CSS aqui */
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Estatísticas de Futebol</h1>
+    </header>
+    <main>
+        <div id="statistics"></div>
+    </main>
+    <footer>
+        <!-- Adicione o conteúdo do rodapé aqui -->
+    </footer>
+    <script>
+        // Substitua 'YOUR_API_KEY' pela sua chave API.
+        var apiKey = 'EOAHIJbGub1ccNohpLkb7t8MRps5BQvEWZPvzKuTI1R7Vssz8qaHsYpUcmqT';
+        
+        // Substitua 'PLAYER_ID' pelo ID do jogador que você deseja obter estatísticas.
+        var playerId = '580';
+        
+        // Construa a URL da API.
+        var apiUrl = 'https://www.api-football.com/api/?Action=get_players&player_id=' + playerId + '&APIkey=' + apiKey;
+        
+        // Crie uma nova solicitação.
+        var request = new XMLHttpRequest();
+        
+        request.open('GET', apiUrl, true);
+        
+        request.onload = function () {
+            // Verifique se a solicitação foi bem-sucedida.
+            if (this.status >= 200 && this.status < 400) {
+                // A solicitação foi bem-sucedida e os dados podem ser extraídos.
+                var data = JSON.parse(this.response);
+                
+                // Exiba os dados na página.
+                document.getElementById('statistics').innerHTML = JSON.stringify(data, null, 2);
+            } else {
+                // A solicitação falhou.
+                console.error('Request failed.  Returned status of ' + this.status);
+            }
+        };
+        
+        request.onerror = function() {
+            // Houve uma conexão erro de algum tipo.
+            console.error('Request failed.');
+        };
+        
+        request.send();
+    </script>
+</body>
+</html>
