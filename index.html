@@ -1,36 +1,187 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search Football Players</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <title>Estatísticas do Jogador</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .search-form {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .search-form input[type="text"] {
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 300px;
+    }
+
+    .search-form button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+
+    .player-details {
+      background-color: #fff;
+      border-radius: 4px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .player-details p {
+      margin-bottom: 10px;
+    }
+
+    .player-details img {
+      max-width: 200px;
+      margin-bottom: 20px;
+    }
+
+    .season-select {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .season-select label {
+      margin-right: 10px;
+    }
+  </style>
 </head>
 <body>
-    <h1>Search Football Players</h1>
-    <input type="text" id="search-input" placeholder="Enter player's name...">
-    <button id="search-button">Search</button>
-    <div id="results"></div>
+  <div class="container">
+    <h1>Estatísticas do Jogador</h1>
 
-    <script>
-        // Your Sportmonks API token
-        var api_token = 'EOAHIJbGub1ccNohpLkb7t8MRps5BQvEWZPvzKuTI1R7Vssz8qaHsYpUcmqT';
+    <form class="search-form">
+      <input type="text" id="player-id-input" placeholder="Digite o ID do jogador">
+      <button type="submit">Pesquisar</button>
+    </form>
 
-        // Event listener for the search button
-        $('#search-button').on('click', function() {
-            var search_query = $('#search-input').val();
-            var url = 'https://api.sportmonks.com/v3/football/players/search/' + search_query + '?api_token=' + api_token;
+    <div id="player-details-container" class="player-details"></div>
 
-            // Make the API request
-            $.getJSON(url, function(data) {
-                // Clear previous results
-                $('#results').empty();
+    <div class="season-select">
+      <label for="season-select">Selecione a temporada:</label>
+      <select id="season-select"></select>
+    </div>
+  </div>
 
-                // Iterate over each player in the response
-                $.each(data.data, function(index, player) {
-                    // Add player's name to the results div
-                    $('#results').append('<p>' + player.firstname + ' ' + player.lastname + '</p>');
-                });
-            });
+  <script>
+    const apiToken = 'EOAHIJbGub1ccNohpLkb7t8MRps5BQvEWZPvzKuTI1R7Vssz8qaHsYpUcmqT'; // Seu token da API do SportMonks
+
+    const searchForm = document.querySelector('.search-form');
+    const playerIdInput = document.getElementById('player-id-input');
+    const playerDetailsContainer = document.getElementById('player-details-container');
+    const seasonSelect = document.getElementById('season-select');
+
+    searchForm.addEventListener('submit', function(event) {
+      event.preventDefault();
+      const playerId = playerIdInput.value.trim();
+      if (playerId !== '') {
+        getPlayerDetails(playerId);
+      }
+    });
+
+    seasonSelect.addEventListener('change', function() {
+      const playerId = playerIdInput.value.trim();
+      const selectedSeasonId = this.value;
+      if (playerId !== '' && selectedSeasonId !== '') {
+        getPlayerStatsForSeason(playerId, selectedSeasonId);
+      }
+    });
+
+    function getPlayerDetails(playerId) {
+      const apiUrl = `https://soccer.sportmonks.com/api/v2.0/players/${playerId}?api_token=${apiToken}&include=stats,stats.season`;
+
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          const player = data.data;
+          const seasons = player.stats.data.map(stat => stat.season.data);
+          renderPlayerDetails(player);
+          renderSeasonOptions(seasons);
+        })
+        .catch(error => {
+          console.error('Erro ao obter os detalhes do jogador:', error);
         });
-    </script>
+    }
+
+    function renderPlayerDetails(player) {
+      const playerDetails = `
+        <img src="${player.image_path}" alt="${player.fullname}">
+        <h2>${player.fullname}</h2>
+        <p>País: ${player.nationality}</p>
+        <p>Idade: ${player.age}</p>
+        <p>Altura: ${player.height} cm</p>
+        <p>Peso: ${player.weight} kg</p>
+      `;
+      playerDetailsContainer.innerHTML = playerDetails;
+    }
+
+    function renderSeasonOptions(seasons) {
+      seasonSelect.innerHTML = '';
+      seasons.forEach(season => {
+        const option = document.createElement('option');
+        option.value = season.id;
+        option.textContent = season.name;
+        seasonSelect.appendChild(option);
+      });
+    }
+
+    function getPlayerStatsForSeason(playerId, seasonId) {
+      const apiUrl = `https://soccer.sportmonks.com/api/v2.0/players/${playerId}?api_token=${apiToken}&include=stats&seasons=${seasonId}`;
+
+      fetch(apiUrl)
+        .then(response => response.json())
+        .then(data => {
+          const playerStats = data.data.stats.data.find(stat => stat.season_id === seasonId);
+          renderPlayerStats(playerStats);
+        })
+        .catch(error => {
+          console.error('Erro ao obter as estatísticas do jogador:', error);
+        });
+    }
+
+    function renderPlayerStats(playerStats) {
+      if (playerStats) {
+        const statsHTML = `
+          <h3>Estatísticas da temporada</h3>
+          <p>Jogos: ${playerStats.games_played || '-'}</p>
+          <p>Gols: ${playerStats.goals || '-'}</p>
+          <p>Assistências: ${playerStats.assists || '-'}</p>
+          <p>Cartões Amarelos: ${playerStats.yellowcards || '-'}</p>
+          <p>Cartões Vermelhos: ${playerStats.redcards || '-'}</p>
+        `;
+        playerDetailsContainer.innerHTML += statsHTML;
+      } else {
+        playerDetailsContainer.innerHTML += '<p>Não há estatísticas disponíveis para a temporada selecionada.</p>';
+      }
+    }
+  </script>
 </body>
 </html>
